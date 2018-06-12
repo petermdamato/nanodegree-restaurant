@@ -7,12 +7,13 @@ var map;
 window.initMap = () => {
   fetchRestaurantFromURL((error, restaurant) => {
     if (error) { // Got an error!
-      console.error(error);
+      console.error("Error",error);
     } else {
       self.map = new google.maps.Map(document.getElementById('map'), {
         zoom: 16,
         center: restaurant.latlng,
-        scrollwheel: false
+        scrollwheel: false,
+        disableDefaultUI: true
       });
       fillBreadcrumb();
       DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
@@ -118,20 +119,29 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
 createReviewHTML = (review) => {
   const li = document.createElement('li');
   const name = document.createElement('p');
-  name.innerHTML = review.name;
+  name.className = 'review-name';
+  name.innerText = review.name;
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = review.date;
+  date.className = 'review-date'
+  date.innerText = review.date;
   li.appendChild(date);
 
   const rating = document.createElement('p');
-  rating.innerHTML = `Rating: ${review.rating}`;
+  rating.innerHTML = "&#9733;".repeat(review.rating) + "&#9734;".repeat(5 - review.rating);
   li.appendChild(rating);
 
-  const comments = document.createElement('p');
-  comments.innerHTML = review.comments;
-  li.appendChild(comments);
+  // Create the wrapper that allows for shortened comments that can be expanded
+  const commentsWrapper = document.createElement('div');
+  commentsWrapper.className = 'review-comments-wrapper';
+  const commentsContainer = document.createElement('div');
+  commentsContainer.className = 'review-comments-shortened';
+
+  // Populate comments section
+  const comment = document.createElement('p');
+  comment.innerText = review.comments;
+  li.appendChild(comment);
 
   return li;
 }
