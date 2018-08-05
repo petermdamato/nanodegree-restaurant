@@ -1,0 +1,23 @@
+{
+  "name": "mws-restaurant-stage-1",
+  "version": "1.0.0",
+  "description": "Grow With Google challenge project",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/petermdamato/nanodegree-restaurant.git"
+  },
+  "author": "Pete D'Amato",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/petermdamato/nanodegree-restaurant/issues"
+  },
+  "homepage": "https://github.com/petermdamato/nanodegree-restaurant#readme",
+  "dependencies": {
+    "idb": "^2.1.3",
+    "leaflet": "^1.3.3"
+  }
+}

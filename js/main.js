@@ -9,6 +9,7 @@ var markers = [];
 document.addEventListener('DOMContentLoaded', (event) => {
   registerServiceWorker();
   fetchNeighborhoods();
+  initMap();
   fetchCuisines();
 });
 
@@ -16,13 +17,13 @@ registerServiceWorker = () => {
   // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      console.log("Success!")
+      console.log("SW registered");
     }).catch(function(error) {
       // If registration fails
       console.log('Registration failed with ' + error);
     });
   }
-}
+};
 
 // Fetch all neighborhoods and set their HTML.
 fetchNeighborhoods = () => {
@@ -34,7 +35,7 @@ fetchNeighborhoods = () => {
       fillNeighborhoodsHTML();
     }
   });
-}
+};
 
 // Set neighborhoods HTML.
 fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
@@ -57,7 +58,7 @@ fetchCuisines = () => {
       fillCuisinesHTML();
     }
   });
-}
+};
 
 // Set cuisines HTML
 fillCuisinesHTML = (cuisines = self.cuisines) => {
@@ -69,7 +70,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
     option.value = cuisine;
     select.append(option);
   });
-}
+};
 
 // Initialize Google map, called from HTML.
 window.initMap = () => {
@@ -77,13 +78,15 @@ window.initMap = () => {
     lat: 40.722216,
     lng: -73.987501
   };
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
-  });
+  map = L.map('map', { zoomControl:false }).setView(loc, 12);//* leaflet code
+  map.scrollWheelZoom.disable(); // Turn off stupid scrolling
+  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
   updateRestaurants();
-}
+};
 
 // Update page and map for current restaurants.
 updateRestaurants = () => {
@@ -103,8 +106,8 @@ updateRestaurants = () => {
       resetRestaurants(restaurants);
       fillRestaurantsHTML();
     }
-  })
-}
+  });
+};
 
 // Clear current restaurants, their HTML and remove their map markers.
 resetRestaurants = (restaurants) => {
@@ -114,10 +117,13 @@ resetRestaurants = (restaurants) => {
   ul.innerHTML = '';
 
   // Remove all map markers
-  self.markers.forEach(m => m.setMap(null));
+  // this.markers.forEach(this.markers)
+  self.markers.forEach((m) => {
+    self.map.removeLayer(m);
+  });
   self.markers = [];
   self.restaurants = restaurants;
-}
+};
 
 // Create all restaurants HTML and add them to the webpage.
 fillRestaurantsHTML = (restaurants = self.restaurants) => {
@@ -159,20 +165,19 @@ createRestaurantHTML = (restaurant) => {
   const more = document.createElement('a');
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  profile.append(more)
+  profile.append(more);
 
-  return li
+  return li;
 }
 
 // Add markers for current restaurants to the map.
 
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
-    // Add marker to the map
+
+    // Make markers then put them in the markers array
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url
-    });
+
     self.markers.push(marker);
   });
 }

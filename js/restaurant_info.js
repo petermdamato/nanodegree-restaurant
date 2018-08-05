@@ -6,17 +6,20 @@ var map;
  */
 window.initMap = () => {
   fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error("Error",error);
+  if (error) { // Got an error!
+      console.error(error);
     } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false,
-        disableDefaultUI: true
-      });
+      let loc = [restaurant.latlng.lat * 1.0003,restaurant.latlng.lng];
+      map = L.map('map', { zoomControl:false }).setView(loc, 12);//* leaflet code
+      map.scrollWheelZoom.disable() // Turn off stupid scrolling
+      L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map)
+
       fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+      var marker = L.marker([restaurant.latlng.lat,restaurant.latlng.lng]).addTo(map);
     }
   });
 }
