@@ -243,7 +243,7 @@ var appDb = (function() {
   static imageUrlForRestaurant(restaurant) {
     if (restaurant.photograph == undefined)
       restaurant.photograph = restaurant.id;
-    return (`/img/${restaurant.photograph}` + '.jpg');
+    return (`/img/${restaurant.photograph}` + '.webp');
 
   }
 

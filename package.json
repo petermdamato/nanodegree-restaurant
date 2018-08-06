@@ -17,7 +17,13 @@
   },
   "homepage": "https://github.com/petermdamato/nanodegree-restaurant#readme",
   "dependencies": {
+    "gulp-concat": "^2.6.1",
+    "gulp-imagemin": "^4.1.0",
+    "gulp-uglify": "^3.0.1",
+    "gulp-webp": "^3.0.0",
     "idb": "^2.1.3",
+    "imagemin": "^6.0.0",
+    "imagemin-pngquant": "^6.0.0",
     "leaflet": "^1.3.3"
   }
 }

@@ -13,18 +13,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
   fetchCuisines();
 });
 
-registerServiceWorker = () => {
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      console.log("SW registered");
-    }).catch(function(error) {
-      // If registration fails
-      console.log('Registration failed with ' + error);
-    });
-  }
-};
-
 // Fetch all neighborhoods and set their HTML.
 fetchNeighborhoods = () => {
   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
@@ -140,8 +128,16 @@ createRestaurantHTML = (restaurant) => {
   const container = document.createElement('div');
   const image = document.createElement('img');
   container.className = 'restaurant-img-container';
-  image.className = 'restaurant-img';
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.className = 'restaurant-img lazyload';    //added lazyload to class
+  image.src = "/img/bg.gif";
+  image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
+    /* Add lowsrc to image for phones */
+  image.lowsrc = DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-small.webp";
+    /* Add srcset for responsive images */
+  image.setAttribute('srcset', DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-large.webp 2x, " +
+  DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-medium.webp 1x, " +
+  DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-small.webp 100w");
+
   image.alt = restaurant.name + ' restaurant in ' + restaurant.neighborhood;
   container.append(image);
   li.append(container);
