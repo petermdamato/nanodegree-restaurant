@@ -105,7 +105,6 @@ resetRestaurants = (restaurants) => {
   ul.innerHTML = '';
 
   // Remove all map markers
-  // this.markers.forEach(this.markers)
   self.markers.forEach((m) => {
     self.map.removeLayer(m);
   });
@@ -129,11 +128,13 @@ createRestaurantHTML = (restaurant) => {
   const image = document.createElement('img');
   container.className = 'restaurant-img-container';
   image.className = 'restaurant-img lazyload';    //added lazyload to class
+  // Before image loads
   image.src = "/img/bg.gif";
+  // Load images 
   image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
-    /* Add lowsrc to image for phones */
+  // For mobile phones
   image.lowsrc = DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-small.webp";
-    /* Add srcset for responsive images */
+  // Responsive sizes
   image.setAttribute('srcset', DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-large.webp 2x, " +
   DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-medium.webp 1x, " +
   DBHelper.imageUrlForRestaurant(restaurant).slice(0, -5) + "-small.webp 100w");
