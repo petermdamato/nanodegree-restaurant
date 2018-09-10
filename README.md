@@ -7,4 +7,6 @@ The project in its current state pulls JSON data served up via a Node server. Th
 
 To use a production build of the restaurant app, step into the project folder and install dependencies from the command line using `npm intall`
 
+You can add gulp to the app using `npm install gulp`
+
 Launch the server from the root folder using `gulp`
