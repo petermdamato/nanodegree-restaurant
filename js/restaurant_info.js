@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 });
 
 /**
- * Initialize Google map, called from HTML.
+ * Initialize Leaflet map, called from HTML.
  */
 window.initMap = () => {
   fetchRestaurantFromURL((error, restaurant) => {
@@ -131,7 +131,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
   });
   container.appendChild(ul);
 }
-// Long code to create form, need to shorten
+// Long code to create form, could be shortened
 createFormHTML = () => {
   const li = document.createElement('li');
   li.className = 'submission';

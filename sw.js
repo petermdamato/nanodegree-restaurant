@@ -98,15 +98,15 @@ self.addEventListener('sync', function (event) {
             reviews.forEach(review => {
                 fetch('http://localhost:1337/reviews/', {
                         body: JSON.stringify(review),
-                        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-                        credentials: 'same-origin', // include, same-origin, *omit
+                        cache: 'no-cache', 
+                        credentials: 'same-origin', 
                         headers: {
                             'content-type': 'application/json'
                         },
                         method: 'POST',
-                        mode: 'cors', // no-cors, cors, *same-origin
-                        redirect: 'follow', // *manual, follow, error
-                        referrer: 'no-referrer', // *client, no-referrer
+                        mode: 'cors', 
+                        redirect: 'follow', 
+                        referrer: 'no-referrer',
                     }).then(response => {
                         return response.json();
                     }).then(data => {
