@@ -5,29 +5,18 @@ var allCaches = [
   contentImgsCache
 ];
 
-function registerServiceWorker( ){
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js').then(function(registration) {
-        // Registration was successful
-        console.log('Service worker registered successful');
-        }, function(err) {
-          // registration failed :(
-          console.log('Service worker registration error: ', err);
-        });
-      });
-    }
-}
-
+importScripts('./js/idb.js')
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(staticCacheName).then(function(cache) {
       console.log('Service worker initd')
       return cache.addAll([
+        '/',
+        './sw.js',
         './index.html',
         './restaurant.html',
         './css/styles.css',
-        './js/main.js',
+        './js/animations.js',
         './js/restaurant_info.js',
         './js/dbhelper.js',
         './js/idb.js'
@@ -63,8 +52,8 @@ self.addEventListener('fetch', function(event) {
   }
 
   event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
+    caches.match(event.request, {ignoreSearch:true}).then(function(response) { 
+        return response || fetch(event.request);
     })
   );
 });
@@ -88,4 +77,45 @@ self.addEventListener('message', function(event) {
   if (event.data.action === 'skipWaiting') {
     self.skipWaiting();
   }
+});
+
+self.addEventListener('sync', function (event) {    
+    var db = idb.open('restaurant-review', 1, function(upgradeDb) {
+        switch (upgradeDb.oldVersion) {
+          // First DB after creation
+          case 0:
+          case 1:
+            console.log('Creating the restaurant object store');
+            upgradeDb.createObjectStore('restaurants', {keyPath: 'id'});
+            console.log('Creating the review object store');
+            upgradeDb.createObjectStore('reviews', {keyPath: 'id'});
+            upgradeDb.createObjectStore('offline-reviews', {keyPath: 'updatedAt'});
+        }
+      })
+    db.then((db) => {
+        let valStoreFrom = db.transaction('offline-reviews', 'readwrite').objectStore('offline-reviews');
+        valStoreFrom.getAll().then(reviews => {
+            reviews.forEach(review => {
+                fetch('http://localhost:1337/reviews/', {
+                        body: JSON.stringify(review),
+                        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                        credentials: 'same-origin', // include, same-origin, *omit
+                        headers: {
+                            'content-type': 'application/json'
+                        },
+                        method: 'POST',
+                        mode: 'cors', // no-cors, cors, *same-origin
+                        redirect: 'follow', // *manual, follow, error
+                        referrer: 'no-referrer', // *client, no-referrer
+                    }).then(response => {
+                        return response.json();
+                    }).then(data => {
+                        let valStoreTo = db.transaction('reviews', 'readwrite').objectStore('reviews');
+                        valStoreTo.put(data);
+                        return;
+                    })
+                });
+            })
+        valStoreFrom.clear();
+        })    
 });

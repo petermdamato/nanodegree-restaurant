@@ -4,10 +4,8 @@ let restaurants,
 var map;
 var markers = [];
 
-
 // Fetch neighborhoods and cuisines on page load
 document.addEventListener('DOMContentLoaded', (event) => {
-  registerServiceWorker();
   fetchNeighborhoods();
   initMap();
   fetchCuisines();
@@ -60,7 +58,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
   });
 };
 
-// Initialize Google map, called from HTML.
+// Initialize Leaflet map, called from HTML.
 window.initMap = () => {
   let loc = {
     lat: 40.722216,
@@ -68,7 +66,7 @@ window.initMap = () => {
   };
   map = L.map('map', { zoomControl:false }).setView(loc, 12);//* leaflet code
   map.scrollWheelZoom.disable(); // Turn off stupid scrolling
-  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
   subdomains: 'abcd',
   maxZoom: 19
@@ -127,9 +125,7 @@ createRestaurantHTML = (restaurant) => {
   const container = document.createElement('div');
   const image = document.createElement('img');
   container.className = 'restaurant-img-container';
-  image.className = 'restaurant-img lazyload';    //added lazyload to class
-  // Before image loads
-  image.src = "/img/bg.gif";
+  image.className = 'restaurant-img lazy';    //added lazyload to class
   // Load images 
   image.setAttribute('data-src', DBHelper.imageUrlForRestaurant(restaurant));
   // For mobile phones

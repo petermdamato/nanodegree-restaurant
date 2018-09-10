@@ -15,8 +15,11 @@ var appDb = (function() {
       // First DB after creation
       case 0:
       case 1:
-        console.log('Creating the restaurant review object store');
+        console.log('Creating the restaurant object store');
         upgradeDb.createObjectStore('restaurants', {keyPath: 'id'});
+        console.log('Creating the review object store');
+        upgradeDb.createObjectStore('reviews', {keyPath: 'id'});
+        upgradeDb.createObjectStore('offline-reviews', {keyPath: 'updatedAt'});
     }
   });
 
@@ -24,7 +27,7 @@ var appDb = (function() {
    * Get all restaurants from JSON server data, cache clientside
    */
   function addRestaurants() {
-    fetch(DBHelper.DATABASE_URL)
+    fetch(DBHelper.DATABASE_URL + 'restaurants')
       .then(response => response.json())
       .then(function(restaurants) {
       // Cache the database
@@ -43,6 +46,29 @@ var appDb = (function() {
       });
     });
   }
+
+  // function addReviews() {
+  //   fetch(DBHelper.DATABASE_REVIEWS_URL)
+  //     .then(response => response.json())
+  //     .then(function(reviews) {
+  //     // Cache the database
+  //     db.then((db) => {
+  //       'then'
+  //       let reviewValStore = db.transaction('reviews', 'readwrite').objectStore('reviews');
+  //         for (const review of reviews) {
+  //           reviewValStore.put(review);
+  //         }
+  //     });
+  //     // Make data available
+  //       callback(null, reviews);
+  //     }).catch(function (err) {
+  //       db.then( (db) => {
+  //         let reviewValStore = db.transaction('reviews','readwrite')
+  //           .objectStore('reviews');
+  //         return reviewValStore.getAll();
+  //     });
+  //   });
+  // }
 
   // Get restaurant by id
   function getByID(id) {
@@ -67,7 +93,7 @@ var appDb = (function() {
 
   // Here come the promises
   return {
-    db: (db),
+    db: (db),    
     addRestaurants: (addRestaurants),
     getByID: (getByID),
     getAll: (getAll)
@@ -85,7 +111,12 @@ var appDb = (function() {
    */
   static get DATABASE_URL() {
     const port = 1337; // Change this to your server port
-    return `http://localhost:${port}/restaurants`;
+    return `http://localhost:${port}/`;
+  }
+
+  static get DATABASE_REVIEWS_URL() {
+    const port = 1337; // Change this to your server port
+    return `http://localhost:${port}/reviews`;
   }
 
   /**
@@ -96,7 +127,7 @@ var appDb = (function() {
     appDb.addRestaurants(callback);
     // if no restaurants, get them from the server
     if (!restaurants) {
-      fetch(DBHelper.DATABASE_URL)
+      fetch(DBHelper.DATABASE_URL + 'restaurants')
       .then(function(response) {
         // fetch from URL
         return response.json();
@@ -138,6 +169,46 @@ var appDb = (function() {
           }
         });
       }
+    });
+  }
+
+  /**
+   * Fetch the reviews for a restaurant by its ID.
+   */
+   //Retrieve the reviews from IDB data if it's there, else retrieve online
+  static fetchReviewsById(id, callback) {
+    const fetchUrl = DBHelper.DATABASE_URL + "reviews?restaurant_id=" + id;
+    // Fetch all reviews for a restaurant based on its ID with proper error handling.
+    const restaurant = appDb.getByID(id);
+
+    appDb.db.then((db) => {
+        let reviewValStore = db.transaction('reviews', 'readwrite').objectStore('reviews');
+        reviewValStore.getAll().then(results => {
+          const reviewCollection = results.filter(r => r.restaurant_id == id);
+          if (reviewCollection.length > 0) {
+            callback(null, reviewCollection)
+          } else {
+            fetch(fetchUrl)
+              .then(function(response) {
+                // fetch from URL
+                return response.json();
+              }).then(function(returnReviews) {
+                // take the response and get an array of restaurants
+                const reviewCollection = returnReviews;
+                let reviewValStore = db.transaction('reviews', 'readwrite').objectStore('reviews');
+                  for (const review of reviewCollection) {
+                    reviewValStore.put(review);
+                  }
+                callback(null, reviewCollection);
+              })
+              .catch(function(error) {
+                callback(error, null);
+                //if fails send the error back.
+              });     
+          };
+
+        });
+      
     });
   }
 
@@ -257,4 +328,44 @@ var appDb = (function() {
 
     return marker;
   }
+
+  static postReview(data) {
+    return fetch(DBHelper.DATABASE_REVIEWS_URL, {
+      body: JSON.stringify(data), 
+      cache: 'no-cache',
+      credentials: 'same-origin',
+      headers: {
+        'content-type': 'application/json'
+      },
+      method: 'POST',
+      mode: 'cors',
+      redirect: 'follow',
+      referrer: 'no-referrer'
+    })
+    .then(response => {
+      return response.json()
+        .then(data => {
+          // Put fetched reviews into IDB
+          appDb.db.then((db) => {
+          let reviewValStore = db.transaction('reviews', 'readwrite').objectStore('reviews');
+          reviewValStore.put(data);
+          return data;
+          });
+          
+        });
+    })
+    .catch(error => {
+      /**
+       * For offline use
+       */
+
+      appDb.db.then((db) => {
+        let reviewValStore = db.transaction('offline-reviews', 'readwrite').objectStore('offline-reviews');
+        reviewValStore.put(data);
+        console.log('Offline review stored');
+        return
+      });
+    });
+  }
+
 }
