@@ -3,12 +3,10 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker
 	.register('/sw.js', {scope: "/"})
     .then(function(registration) {
-        if ('sync' in registration) {
-        }
         // Registration was successful
-        console.log('Service worker registered successful');
+        console.log('Service worker registered successfully');
         }, function(err) {
-          // registration failed :(
+          // Registration failed
           console.log('Service worker registration error: ', err);
         });
       }

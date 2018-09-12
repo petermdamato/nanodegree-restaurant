@@ -27,7 +27,7 @@ var appDb = (function() {
    * Get all restaurants from JSON server data, cache clientside
    */
   function addRestaurants() {
-    fetch(DBHelper.DATABASE_URL + 'restaurants')
+    fetch(`${DBHelper.DATABASE_URL}restaurants`)
       .then(response => response.json())
       .then(function(restaurants) {
       // Cache the database
@@ -177,7 +177,6 @@ var appDb = (function() {
    */
    //Retrieve the reviews from IDB data if it's there, else retrieve online
   static fetchReviewsById(id, callback) {
-    const fetchUrl = DBHelper.DATABASE_URL + "reviews?restaurant_id=" + id;
     // Fetch all reviews for a restaurant based on its ID with proper error handling.
     const restaurant = appDb.getByID(id);
 
@@ -188,7 +187,7 @@ var appDb = (function() {
           if (reviewCollection.length > 0) {
             callback(null, reviewCollection)
           } else {
-            fetch(fetchUrl)
+            fetch(`${DBHelper.DATABASE_URL}reviews?restaurant_id=${id}`)
               .then(function(response) {
                 // fetch from URL
                 return response.json();
@@ -343,6 +342,7 @@ var appDb = (function() {
       referrer: 'no-referrer'
     })
     .then(response => {
+      console.log(response)
       return response.json()
         .then(data => {
           // Put fetched reviews into IDB
@@ -367,5 +367,72 @@ var appDb = (function() {
       });
     });
   }
-
+  static toggleFavorite(fav, id) {
+    // TODO, after you do this once, need to regather the restaurant information
+    var rest_id = id;
+    
+    var favorited;
+    fetch(`${DBHelper.DATABASE_URL}restaurants/${rest_id}`, {
+        method: 'GET'
+      }).then(response => {
+        return response.json();
+      }).then(data => {
+        favorited = (String(data.is_favorite) == "true")
+      }).then(function() {
+            fetch(`${DBHelper.DATABASE_URL}restaurants/${rest_id}/?is_favorite=${!favorited}`, {
+                method: 'PUT'
+              })
+              .then(response => {
+                return response.json();
+              })
+              .then(data => {
+                appDb.db.then((db) => {
+                  let restaurantValStore = db.transaction('restaurants', 'readwrite').objectStore('restaurants');
+                  restaurantValStore.put(data)
+                });
+                return data;
+              }).catch(error => {
+                console.log(error)
+              })
+      }).catch(error => {
+        console.log("Favorite data not found")
+      });
+  }
 }
+
+// Use this function instead of background sync to immediately send reviews
+function offlineOnline() {
+  if (navigator.onLine) {
+    var db = idb.open('restaurant-review', 1);
+    db.then((db) => {
+        let valStoreFrom = db.transaction('offline-reviews', 'readwrite').objectStore('offline-reviews');
+        valStoreFrom.getAll().then(reviews => {
+            console.log('Posting offline reviews...')
+            reviews.forEach(review => {
+                fetch('http://localhost:1337/reviews/', {
+                        body: JSON.stringify(review),
+                        cache: 'no-cache', 
+                        credentials: 'same-origin', 
+                        headers: {
+                            'content-type': 'application/json'
+                        },
+                        method: 'POST',
+                        mode: 'cors', 
+                        redirect: 'follow', 
+                        referrer: 'no-referrer',
+                    }).then(response => {
+                        return response.json();
+                    }).then(data => {
+                        let valStoreTo = db.transaction('reviews', 'readwrite').objectStore('reviews');
+                        valStoreTo.put(data);
+                        return;
+                    })
+                });
+            })
+        valStoreFrom.clear();
+        })    
+    } 
+}
+
+window.addEventListener('online',  offlineOnline);
+window.addEventListener('offline', offlineOnline);

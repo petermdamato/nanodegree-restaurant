@@ -62,6 +62,7 @@ fetchRestaurantFromURL = (callback) => {
     });
   }
 }
+
 /**
  * Create restaurant HTML and add it to the webpage
  */
@@ -80,6 +81,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;
 
+  fillFavorite();
   // fill operating hours
   if (restaurant.operating_hours) {
     fillRestaurantHoursHTML();
@@ -88,7 +90,23 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   // fill reviews
   fillReviewsHTML();
 }
-
+fillFavorite = (restaurant = self.restaurant) => {
+  const heart = document.getElementById('favorite-heart');
+  const heartIcon = document.createElement('i');
+  const heartedIcon = document.createElement('i');
+  heartIcon.className = 'far fa-heart top';
+  heartedIcon.className = 'fas fa-heart bottom'
+  console.log(restaurant.is_favorite)
+  heart.appendChild(heartIcon)
+  heart.appendChild(heartedIcon)
+  if (!restaurant.is_favorite || restaurant.is_favorite == 'false') {
+    $('.bottom').addClass('hidden-heart')
+  }
+  $('#favorite-heart').click(() => {
+    $('.bottom').toggleClass('hidden-heart');
+    DBHelper.toggleFavorite(restaurant.is_favorite,restaurant.id)
+  });
+}
 /**
  * Create restaurant operating hours HTML table and add it to the webpage.
  */
@@ -294,3 +312,5 @@ getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+

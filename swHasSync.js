@@ -20,8 +20,7 @@ self.addEventListener('install', function(event) {
         './js/restaurant_info.js',
         './js/dbhelper.js',
         './js/idb.js',
-        './js/register_sw.js',
-        'https://use.fontawesome.com/releases/v5.3.1/css/all.css'
+        './js/register_sw.js'
       ]);
     })
   );
@@ -80,8 +79,37 @@ self.addEventListener('message', function(event) {
     self.skipWaiting();
   }
 });
-// Removed sync, changed to simple online event listener in dbhelper
-// self.addEventListener('sync', function (event) {    
-//     if (event.tag == 'myFirstSync') {
-//   }
-// });
+
+self.addEventListener('sync', function (event) {    
+    if (event.tag == 'myFirstSync') {
+        console.log('Yo')
+    var db = idb.open('restaurant-review', 1);
+    db.then((db) => {
+        let valStoreFrom = db.transaction('offline-reviews', 'readwrite').objectStore('offline-reviews');
+        valStoreFrom.getAll().then(reviews => {
+            reviews.forEach(review => {
+                fetch('http://localhost:1337/reviews/', {
+                        body: JSON.stringify(review),
+                        cache: 'no-cache', 
+                        credentials: 'same-origin', 
+                        headers: {
+                            'content-type': 'application/json'
+                        },
+                        method: 'POST',
+                        mode: 'cors', 
+                        redirect: 'follow', 
+                        referrer: 'no-referrer',
+                    }).then(response => {
+                        return response.json();
+                    }).then(data => {
+                        let valStoreTo = db.transaction('reviews', 'readwrite').objectStore('reviews');
+                        valStoreTo.put(data);
+                        return;
+                    })
+                });
+            })
+        valStoreFrom.clear();
+        })    
+  }
+    
+});

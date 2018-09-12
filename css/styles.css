@@ -292,10 +292,45 @@ nav h2 a {
   font-size: 20pt;
   font-weight: 200;
   letter-spacing: 0;
-  margin: 15px 0 30px;
+  margin:0 0 !important;
   text-transform: uppercase;
-  line-height: 1.1;
 }
+#header-container {
+  margin: 15px 0;
+  display:flex;
+  justify-content: space-between;
+  line-height:1 !important;
+  padding-right:30px;
+}
+#favorite-heart {
+  border:none;
+  background:none;
+}
+#favorite-heart:visited {
+  outline:0;
+}
+.top {
+  position:relative;
+  opacity:.2;
+  -webkit-transition: opacity .6;
+  transition: opacity .6s;
+}
+.top:hover {
+  opacity:.5;
+}
+.bottom {
+  float:right;
+  right:30px !important;
+  position:relative;
+  width:0;
+}
+.hidden-heart {
+  display:none !important;
+}
+#header-container i {
+  color:#f18200;
+  font-size:30px;
+}   
 #restaurant-img {
 	width: 90%;
 }
